@@ -55,10 +55,6 @@ def SnT_mass(do=19.05/1e3,L_shell_noflange=3144/1e3,t_tube_single= 2.11/1e3):
     L_tube = L_shell_noflange + 2* t_tubesheet + 2*l_tube_extra
 
 
-
-
-
-
     #Calculate mass of shell
     pi = np.pi
     m_shell_only = rho_material* pi /4 * ( (d_i_shell+t_d_shell)**2 - d_i_shell**2 ) * L_shell_noflange

@@ -77,7 +77,16 @@ ls = ["k--","k-", "k-."]
 for i,C  in  enumerate([0,C_ratio,1]):   
     NTU  = np.linspace(0.1,20,100)
     epsilon = epsilon_ntu(NTU, C, exchanger_type, shell_passes=shell_passes)
-    #plt.plot(NTU, epsilon, ls[i], label=f'C = {C:.2f}')
+    #plt.plot(NTU, epsilon, ls[i], label=rf'$C_r$ = {C:.2f}')
+    if C==C_ratio:
+        eps_max = 0.99*epsilon[-1]
+        indices = np.where(epsilon < eps_max)
+        if indices[0].size > 0:
+            largest_NTU = NTU[indices[-1][-1]]
+        else:
+            largest_NTU = None
+        #print(f"The highest NTU which is 1% lower than eps_max = {epsilon[-1]:.2%} is NTU={largest_NTU:.2f}")
+
 
 #Rating on one HX (low dp)
 epsilon = [0.7,0.75,0.8, 0.85, 0.9, 0.92, 0.94,0.95,0.952]
@@ -88,7 +97,7 @@ U_A_max = U_A_req * oversize_fact
 '''
 print(f"Average pressure drop: {np.mean(dp):.2%} +/- {np.std(dp)*100:.2f} of p_in")
 
-plt.scatter(U_A_req/C_min, epsilon,label = "Aspen req. area",marker="+")
+#plt.scatter(U_A_req/C_min, epsilon,label = "Aspen req. area",marker="+")
 plt.scatter(U_A_max/C_min, epsilon,label = "Aspen act. area",marker="x")
 plt.grid(True)
 plt.xlabel(r'Number of Transfer Units  $ N_{TU}  = UA/C_{min} (-)$')
@@ -98,4 +107,5 @@ plt.legend()
 plt.title('Single pass Shell & Tube HX effectiveness curve')
 plt.savefig('plots/eps_NTU_with_Aspen.svg', format='svg')
 plt.show() 
+
 '''

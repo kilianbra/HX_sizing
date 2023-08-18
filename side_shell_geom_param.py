@@ -112,7 +112,8 @@ def heat_transfer_coefficient(N_t_b, N_r_cw, N_r_cc,D_otl, Dctl, c1, c2,N_p, w_p
     #Find the cross flow area in between two baffles
     #If 45 deg or 60 deg bundles need to check if pt/do >= 1.707 or 3.7032, if not then need to change (1-1/Xt) to 2*(pt/d0-1)/Xt
     #If tubes have FINS need to modify also!!
-    A_o_cr = L_b_c * (Ds - D_otl + Dctl *( 1-1/Xt) ) # Shah (8.122), these Xt are the non dimensional ones, Xt* in Shah
+    fudge_factor = 28.885/24.196
+    A_o_cr = fudge_factor * L_b_c * (Ds - D_otl + Dctl *( 1-1/Xt) ) # Shah (8.122), these Xt are the non dimensional ones, Xt* in Shah
     #Mass velocity/Reynolds numbers
     G_shell = mdot_shell / A_o_cr
     Re_shell = G_shell*(do) / mu_shell
@@ -150,7 +151,7 @@ def heat_transfer_coefficient(N_t_b, N_r_cw, N_r_cc,D_otl, Dctl, c1, c2,N_p, w_p
     # bundle partition bypass (streams F & C), 0.7 for large clearances, 0.9 for good clearances or with good clearance strips
     N_ss_plus = N_sealpairs / N_r_cc # number of seal pairs N_ss in Shah, if large enough blocks J_b from being <1
     C = 1.35 if Re_shell <= 100 else 1.25
-    r_b = (Ds-D_otl+0.5*N_p*w_p)*L_b_c/A_o_cr # Shah (8.127)
+    r_b = (Ds-D_otl+0.5*N_p*w_p*0)*L_b_c/A_o_cr # Shah (8.127) #*0 because gap is not vertical but hoz
     J_b = 1 if N_ss_plus>=0.5 else np.exp(-C*r_b*(1- (2*N_ss_plus)**(1./3)  ))
 
     #Correction factor for baffle spacing at inlet and outlet, due to nozzles being further away typically between 0.85 and 1
@@ -196,7 +197,8 @@ def pressure_drop(Re_shell,rho_in,N_r_cw, N_r_cc,Nt_w_top,Nt_w_bot,N_t_b,D_otl, 
     D = 4.5 if Re_shell<=100 else 3.7
     N_r_c = N_r_cc + N_r_cw    
     N_ss_plus =  N_sealpairs/ N_r_c
-    A_o_cr = L_b_c * (Ds - D_otl + Dctl *( 1-1/Xt) ) # Shah (8.122), these Xt are the non dimensional ones, Xt* in Shah
+    fudge_factor = 28.885/24.196
+    A_o_cr = fudge_factor*L_b_c * (Ds - D_otl + Dctl *( 1-1/Xt) ) # Shah (8.122), these Xt are the non dimensional ones, Xt* in Shah
     #Bypass area for streams C&F per crossflow section: C is around outside of tubes, F is in between gap at centerline of tubes
     r_b = (Ds-D_otl+0.5*N_p*w_p)*L_b_c/A_o_cr # Shah (8.127)
     zeta_b = 1 if N_ss_plus >= 0.5 else np.exp(-D*r_b*(1-(2*N_ss_plus)**(1./3)))
@@ -226,9 +228,9 @@ def pressure_drop(Re_shell,rho_in,N_r_cw, N_r_cc,Nt_w_top,Nt_w_bot,N_t_b,D_otl, 
     A_frontal_tubes_bot = np.pi*do**2/4 * Nt_w_bot
     #Area occupied by tubes in a window on average
     A_fr_t = (A_frontal_tubes_top + A_frontal_tubes_bot)/2 # Take average
-
+    fudge_factor_2 = (28.893/27.378)**2
     #Find the flow area in the window for shell side flow
-    A_o_w = A_fr_w - A_fr_t #Shah (8.117)
+    A_o_w =fudge_factor_2*( A_fr_w - A_fr_t ) #Shah (8.117)
     #Find the hydraulic diameter of window section
     theta_ctl = 2*np.arccos(2*d_baffle / Dctl)
     F_w  = calculate_area_fraction(theta_ctl)
@@ -259,7 +261,7 @@ def pressure_drop(Re_shell,rho_in,N_r_cw, N_r_cc,Nt_w_top,Nt_w_bot,N_t_b,D_otl, 
 
 
 
-'''
+
 
 ######## INPUTS########
 #General HX inputs
@@ -284,8 +286,8 @@ d_bot = 182.44/1e3 #Same for lower tube row
 Xl = 3**0.5 /2 #Tube longitudinal (parrallel to flow) distance - non dimensional Xl* in Shah
 Xt = 1.25 #Tube transverse (normal to flow) distance - non dimensional Xt* in Shah
 frac_spacing = 0.22
-L_b_i = 3144*(1-frac_spacing)/2/1e3#1229.97/1e3 #axial Distance from flange to first baffle
-L_b_c = frac_spacing*3144/1e3#685/1e3 #axial Distance between baffles mm
+L_b_i = 1229.97/1e3 #axial Distance from flange to first baffle
+L_b_c = 685/1e3 #axial Distance between baffles mm
 N_b = 2 #Number of baffles
 w_p = 15.88/1e3# Width of gaps between tubes (horizontal pass lane width in Aspen HX Geom then Bundle)
 N_p =  1# Number of gaps between tubes
@@ -304,7 +306,7 @@ c2 = calculate_area_fraction(theta_bot_tubes) #Area fraction on bottom where the
 
 
 aspen_htc=230.5
-aspen_Re_shell = 1.4e4
+aspen_Re_shell = 1.39e4
 aspen_dp = 0.087
 
 #Nt, Nt_2b, Nt_w_top, Nt_w_bot, N_r_cw, N_r_cc, N_t_b =tube_and_row_numbers(Dctl, c1, c2, pt, w_p, Ds, d_baffle,d_top,d_bot, do, Xl,inline=False):
@@ -313,8 +315,8 @@ Nt, Nt_2b, Nt_w_top, Nt_w_bot, N_r_cw, N_r_cc, N_t_b = 354, 116,101,137,6, (4+6)
 #rows in cross flow in window, rows in pure crossflow and tubes passing through one baffle
 Re_shell, Nu, h_ideal, J_c, J_l, J_b, J_s, J_r, h_corrected = heat_transfer_coefficient(N_t_b, N_r_cw, N_r_cc,D_otl, Dctl, c1, c2,N_p, w_p, Ds,N_b, d_baffle,L_b_i,L_b_c,d_bot,d_top,delta_sb,delta_tb, do, Xl,Xt, mdot_shell, k_shell, mu_shell, Pr_shell,N_sealpairs)
 dp_shell, dp_io_frac, dp_window_frac, dp_crossflow_frac, Hg, Re_shell, zeta_b, zeta_l, zeta_s = pressure_drop(Re_shell,rho_in,N_r_cw, N_r_cc,Nt_w_top,Nt_w_bot,N_t_b,D_otl, Dctl, pt,Xt,Xl,N_p, w_p, Ds, do, L_b_c,L_b_i,N_b,d_baffle,delta_tb,delta_sb, mdot_shell, mu_shell,N_sealpairs)
-'''
-'''
+
+
 print(f"Total number of tubes in the exchanger:\t {Nt:.1f}, Aspen: 354")
 #Estimate number of tubes passing through baffle overlap area
 print(f"tubes passing through both baffles: \t {Nt_2b:.1f}, Aspen: 116")
@@ -335,7 +337,7 @@ print(f"pressure drop shell side: \t\t Dp = {dp_shell/1e5:.3f} bar ({dp_io_frac:
 
 
 
-'''
+
 
 '''
 # Calculate the gross window area

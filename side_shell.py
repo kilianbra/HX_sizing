@@ -111,9 +111,9 @@ def calculate_Nu(Red, Pr, Xl, Xt, inline=False,Nr=11):
 Xt = 1.25
 Xl = 3**0.5 /2
 d_o_tube = 19.05/1e3
-mdot_flue = 10 
-A_ocr = 1
-mu_flue = 0.0339e-3
+mdot_flue = 10 /4
+A_ocr = 0.1
+mu_flue = 0.033e-3
 Red = mdot_flue/A_ocr * d_o_tube / mu_flue
 #Red = 326
 Pr = 0.74
@@ -125,7 +125,7 @@ h = Nu * k/d_o_tube
 
 
 Pr_opt = [0.74]#np.linspace(0.6, 1.1, 0.1)  
-Re = np.geomspace(2, 3e5, 100)
+
 
 def calc_Nu2(Red,Pr,inline=True):
     # Heat transfer from Tubes in Crossflow A. Zukauskas 1987
@@ -145,9 +145,52 @@ def calc_Nu2(Red,Pr,inline=True):
         else:
             Nu = np.nan
     return Nu
+
+'''
 Xl_i = 1.25
 # Calculate the Prandtl number for each pressure
+#Compare with Kays and London Inputs
+Pr = 0.74
+N_r = 15
+#Kays and London spacing
+Xl = 1.25
+Xt = 1.5
+Re = np.geomspace(600, 15e3, 50)
+j=[]
+f=[]
+for Red in Re:
+        Nu = calculate_Nu(Red,Pr,Xl,Xt,inline=False,Nr=N_r)
+        Hg = calculate_Hg(Red, Xl, Xt, inline=False,Nr=N_r)
+        j.append( Nu / Red / Pr * Pr**(2/3) )
+        f.append(2*(Xt-1)/np.pi * Hg/Red**2 )
+plt.plot(Re, j, "k-",label="Heat transfer (K&L)",color='C0')
+plt.plot(Re, f, "k--",label="Friction (K&L)",color='C0')
+#My Shell and Tube spacing
+Re = np.geomspace(600, 15e3, 50)
+Xl = 3**(0.5)/2
+Xt = 1.25
+j=[]
+f=[]
+for Red in Re:
+        Nu = calculate_Nu(Red,Pr,Xl,Xt,inline=False,Nr=N_r)
+        Hg = calculate_Hg(Red, Xl, Xt, inline=False,Nr=N_r)
+        j.append( Nu / Red / Pr * Pr**(2/3) )
+        f.append(2*(Xt-1)/np.pi * Hg/Red**2 )
+plt.plot(Re, j, "k-",label="Heat transfer (Aspen geom)",color='C1')
+plt.plot(Re, f, "k--",label="Friction (Aspen geom)",color='C1')
 
+
+# Plot settings
+plt.xlabel(r'$Re_d$')
+plt.ylabel(r'$j$ and $f$')
+plt.title('Tube bank in crossflow Nu correlations')
+plt.grid(True)
+plt.legend()
+plt.xscale('log')
+plt.yscale('log')
+plt.savefig('plots/KL_n_aspen.svg', format='svg')
+plt.show()
+'''
 """ 
 plt.figure(1)
 for Pr in Pr_opt:
@@ -173,16 +216,7 @@ Re_filtered = np.array(Re)[mask]
 plt.plot(Re_filtered, 10**(intercept + slope*np.log10(Re_filtered)), 'k--', label = rf'Best fit: $Nu= {10**intercept:.2f} Re^{{ {slope:.2f} }}$')
 
 
-# Plot settings
-plt.xlabel(r'$Re_d$')
-plt.ylabel(r'$Nu_d$')
-plt.title('Tube bank in crossflow Nu correlations')
-plt.grid(True)
-plt.legend()
-plt.xscale('log')
-plt.yscale('log')
-plt.savefig('plots/Nu_crossflow_over_tubes.svg', format='svg')
-#plt.show()
+
 #print("done")
 
 #Nu = calculate_Nu(Red,Pr,Xl,Xt,inline=False)
